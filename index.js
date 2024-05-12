@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { useAsyncError } = require('react-router-dom');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
@@ -32,13 +33,42 @@ async function run() {
 
 
     // const volunteerCollection = client.db('volunteerDB').collection('volunteering')
-    const volunteerCollection = client.db('volunteerDB').collection('volunteering')
+    const volunteerCollection = client.db('volunteerDB').collection('volunteering');
+
+    app.get('/volunteerNeeded', async(req, res)=>{
+      const cursor = volunteerCollection.find();
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+    app.get('/volunteerNeeded/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await volunteerCollection.findOne(query);
+      res.send(result)
+    })
     app.post('/volunteers', async(req, res)=>{
       const volunteer = req.body;
       console.log(volunteer);
       const result = await volunteerCollection.insertOne(volunteer);
       res.send(result)
     })
+    // app.put('/beVolunteerDetails/id', async(req, res)=>{
+    //   const query = {_id: new ObjectId(req.params.id)};
+    //   const  volunteerDetails ={
+    //     $set:{
+    //       thumbnail:req.body.thumbnail,
+    //       category:req.body.category,
+    //       deadline:req.body.deadline,
+    //       description:req.body.description,
+    //       location:req.body.location,
+    //       post_title:req.body.post_title,
+    //       volunteer_needed:req.body.volunteer_needed,
+    //       email:req.body.email,
+    //       userName:req.body.userName
+    //     }
+    //   }
+    //   const result = await 
+    // })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
