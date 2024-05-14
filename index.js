@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { useAsyncError } = require('react-router-dom');
 require('dotenv').config()
@@ -34,6 +35,13 @@ async function run() {
 
     const volunteerCollection = client.db('volunteerDB').collection('volunteering');
     const requestedCollection = client.db('volunteerDB').collection('requestedVolunteer')
+
+
+    app.post('/jwt', async(req, res)=>{
+      const user = req.body;
+      console.log('user for token', user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
+    })
 
     app.get('/volunteerNeeded', async(req, res)=>{
       const cursor = volunteerCollection.find();
@@ -72,6 +80,11 @@ async function run() {
       const result = await volunteerCollection.find({email:req.params.email}).toArray()
       res.send(result)
     })
+    // app.get('/reqVolunteering/:email', async(req, res)=>{
+    //   console.log(req.params.email);
+    //   const result = await requestedCollection.find({email:req.params.email}).toArray()
+    //   res.send(result)
+    // })
     app.get('/singleVolunteer/:id', async(req, res ) =>{
       console.log(req.params.id);
       const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
@@ -101,6 +114,14 @@ async function run() {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await volunteerCollection.deleteOne(query);
+      res.send(result)
+      console.log(result);
+      res.send(result)
+    })
+    app.delete('/reqVolunteerDelete/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await requestedCollection.deleteOne(query);
       res.send(result)
       console.log(result);
       res.send(result)
