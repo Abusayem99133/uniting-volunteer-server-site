@@ -33,19 +33,19 @@ async function run() {
 
 
     const volunteerCollection = client.db('volunteerDB').collection('volunteering');
-    // const requestedCollection = client.db('volunteerDB').collection('requestedVolunteer')
+    const requestedCollection = client.db('volunteerDB').collection('requestedVolunteer')
 
     app.get('/volunteerNeeded', async(req, res)=>{
       const cursor = volunteerCollection.find();
       const result = await cursor.toArray();
       res.send(result)
     })
-    // app.get('/reqCollection', async(req, res)=>{
-    //   const cursor = requestedCollection.find();
-    //   const result  = await cursor.toArray();
-    //   res.send(result)
-    //   console.log(result);
-    // })
+    app.get('/reqCollection', async(req, res)=>{
+      const cursor = requestedCollection.find();
+      const result  = await cursor.toArray();
+      res.send(result)
+      console.log(result);
+    })
     app.get('/volunteerNeeded/:id', async(req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
@@ -58,6 +58,15 @@ async function run() {
       const result = await volunteerCollection.insertOne(volunteer);
       res.send(result)
     })
+    app.post('/requestedVolunteer', async(req, res)=>{
+      const reqVolunteer = req.body;
+      console.log(reqVolunteer);
+      const result = await requestedCollection.insertOne(reqVolunteer);
+      res.send(result)
+    })
+    // app.get('/reqVolunteer', async(req, res)=>{
+    //   const id
+    // })
     app.get('/volunteering/:email', async(req, res)=>{
       console.log(req.params.email);
       const result = await volunteerCollection.find({email:req.params.email}).toArray()
@@ -68,6 +77,7 @@ async function run() {
       const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
       res.send(result)
     })
+    
     app.put('/updateVolunteer/:id', async(req, res)=>{
       console.log(req.params.id);
       const query = {_id: new ObjectId(req.params.id)};
