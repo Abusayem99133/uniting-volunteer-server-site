@@ -58,19 +58,32 @@ async function run() {
       const result = await volunteerCollection.insertOne(volunteer);
       res.send(result)
     })
+    app.get('/volunteering/:email', async(req, res)=>{
+      console.log(req.params.email);
+      const result = await volunteerCollection.find({email:req.params.email}).toArray()
+      res.send(result)
+    })
     app.get('/singleVolunteer/:id', async(req, res ) =>{
       console.log(req.params.id);
       const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
       res.send(result)
     })
-    app.get('/updateVolunteer/:id', async(req, res)=>{
+    app.put('/updateVolunteer/:id', async(req, res)=>{
       console.log(req.params.id);
-      const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
-      res.send(result)
-    })
-    app.get('/volunteering/:email', async(req, res)=>{
-      console.log(req.params.email);
-      const result = await volunteerCollection.find({email:req.params.email}).toArray()
+      const query = {_id: new ObjectId(req.params.id)};
+      const data ={
+        $set: {
+          thumbnail:req.body.thumbnail,
+          post_title:req.body.post_title,
+          category:req.body.category,
+          deadline:req.body.deadline,
+          volunteer_needed:req.body.volunteer_needed,
+          location:req.body.location,
+          description:req.body.description
+         
+        }
+      }
+      const result=await volunteerCollection.updateOne(query, data);
       res.send(result)
     })
     
