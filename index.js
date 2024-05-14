@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { useAsyncError } = require('react-router-dom');
 require('dotenv').config()
@@ -17,7 +18,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-
+app.use(cookieParser())
 
 
 
@@ -31,7 +32,10 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-
+const logger = async( req, res, next )=>{
+  console.log('request for call', req.host, req.originalUrl)
+  next()
+}
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -42,7 +46,7 @@ async function run() {
     const requestedCollection = client.db('volunteerDB').collection('requestedVolunteer')
 
 
-    app.post('/jwt', async(req, res)=>{
+    app.post('/jwt', logger, async(req, res)=>{
       const user = req.body;
       console.log('user for token', user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
@@ -57,32 +61,33 @@ async function run() {
     app.post('/logout', async(req, res)=>{
       const user = req.body;
       console.log('logging out', user);
-      res.clearCookie('token', {maxAge: 0} .send({success: true}))
+      // res.clearCookie('token', {maxAge: 0} .send({success: true}))
     })
-    app.get('/volunteerNeeded', async(req, res)=>{
+    app.get('/volunteerNeeded', logger, async(req, res)=>{
       const cursor = volunteerCollection.find();
       const result = await cursor.toArray();
       res.send(result)
     })
-    app.get('/reqCollection', async(req, res)=>{
+    app.get('/reqCollection', logger, async(req, res)=>{
+      console.log('cookies', req.cookies);
       const cursor = requestedCollection.find();
       const result  = await cursor.toArray();
       res.send(result)
       console.log(result);
     })
-    app.get('/volunteerNeeded/:id', async(req, res)=>{
+    app.get('/volunteerNeeded/:id',logger, async(req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await volunteerCollection.findOne(query);
       res.send(result)
     })
-    app.post('/volunteers', async(req, res)=>{
+    app.post('/volunteers', logger, async(req, res)=>{
       const volunteer = req.body;
       console.log(volunteer);
       const result = await volunteerCollection.insertOne(volunteer);
       res.send(result)
     })
-    app.post('/requestedVolunteer', async(req, res)=>{
+    app.post('/requestedVolunteer',logger, async(req, res)=>{
       const reqVolunteer = req.body;
       console.log(reqVolunteer);
       const result = await requestedCollection.insertOne(reqVolunteer);
@@ -91,8 +96,9 @@ async function run() {
     // app.get('/reqVolunteer', async(req, res)=>{
     //   const id
     // })
-    app.get('/volunteering/:email', async(req, res)=>{
+    app.get('/volunteering/:email', logger, async(req, res)=>{
       console.log(req.params.email);
+      console.log('token', req.cookies.token);
       const result = await volunteerCollection.find({email:req.params.email}).toArray()
       res.send(result)
     })
@@ -101,13 +107,13 @@ async function run() {
     //   const result = await requestedCollection.find({email:req.params.email}).toArray()
     //   res.send(result)
     // })
-    app.get('/singleVolunteer/:id', async(req, res ) =>{
+    app.get('/singleVolunteer/:id', logger, async(req, res ) =>{
       console.log(req.params.id);
       const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
       res.send(result)
     })
     
-    app.put('/updateVolunteer/:id', async(req, res)=>{
+    app.put('/updateVolunteer/:id', logger,async(req, res)=>{
       console.log(req.params.id);
       const query = {_id: new ObjectId(req.params.id)};
       const data ={
@@ -126,7 +132,7 @@ async function run() {
       res.send(result)
     })
     
-    app.delete('/volunteerDelete/:id', async(req, res) =>{
+    app.delete('/volunteerDelete/:id',logger, async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await volunteerCollection.deleteOne(query);
@@ -134,7 +140,7 @@ async function run() {
       console.log(result);
       res.send(result)
     })
-    app.delete('/reqVolunteerDelete/:id', async(req, res) =>{
+    app.delete('/reqVolunteerDelete/:id',logger, async(req, res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await requestedCollection.deleteOne(query);
