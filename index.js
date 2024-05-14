@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 
-console.log(process.env.DB_PASS);
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ddlv3rx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -32,14 +32,20 @@ async function run() {
     await client.connect();
 
 
-    // const volunteerCollection = client.db('volunteerDB').collection('volunteering')
     const volunteerCollection = client.db('volunteerDB').collection('volunteering');
+    // const requestedCollection = client.db('volunteerDB').collection('requestedVolunteer')
 
     app.get('/volunteerNeeded', async(req, res)=>{
       const cursor = volunteerCollection.find();
       const result = await cursor.toArray();
       res.send(result)
     })
+    // app.get('/reqCollection', async(req, res)=>{
+    //   const cursor = requestedCollection.find();
+    //   const result  = await cursor.toArray();
+    //   res.send(result)
+    //   console.log(result);
+    // })
     app.get('/volunteerNeeded/:id', async(req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
@@ -52,23 +58,30 @@ async function run() {
       const result = await volunteerCollection.insertOne(volunteer);
       res.send(result)
     })
-    // app.put('/beVolunteerDetails/id', async(req, res)=>{
-    //   const query = {_id: new ObjectId(req.params.id)};
-    //   const  volunteerDetails ={
-    //     $set:{
-    //       thumbnail:req.body.thumbnail,
-    //       category:req.body.category,
-    //       deadline:req.body.deadline,
-    //       description:req.body.description,
-    //       location:req.body.location,
-    //       post_title:req.body.post_title,
-    //       volunteer_needed:req.body.volunteer_needed,
-    //       email:req.body.email,
-    //       userName:req.body.userName
-    //     }
-    //   }
-    //   const result = await 
-    // })
+    app.get('/singleVolunteer/:id', async(req, res ) =>{
+      console.log(req.params.id);
+      const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
+      res.send(result)
+    })
+    app.get('/updateVolunteer/:id', async(req, res)=>{
+      console.log(req.params.id);
+      const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
+      res.send(result)
+    })
+    app.get('/volunteering/:email', async(req, res)=>{
+      console.log(req.params.email);
+      const result = await volunteerCollection.find({email:req.params.email}).toArray()
+      res.send(result)
+    })
+    
+    app.delete('/volunteerNeeded/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await volunteerCollection.deleteOne(query);
+      res.send(result)
+      console.log(result);
+      res.send(result)
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
