@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken')
-const cookieParser = require('cookie-parser');
+// const jwt = require('jsonwebtoken')
+// const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { useAsyncError } = require('react-router-dom');
 require('dotenv').config()
@@ -11,14 +11,9 @@ const port = process.env.PORT || 5000;
 
 // middleware
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173'
-  ],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser())
+// app.use(cookieParser())
 
 
 
@@ -32,62 +27,78 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-const logger = async( req, res, next )=>{
-  console.log('request for call', req.host, req.originalUrl)
-  next()
-}
+// const logger = async( req, res, next )=>{
+//   console.log('request for call', req.host, req.originalUrl)
+//   next()
+// }
+// const verifyToken = async(req, res, next)=>{
+//   const token = req.cookies?.token;
+//   console.log('value of token in middleware', token);
+// if(!token){
+//   return res.status(401).send({message: 'unAuthorized'})
+// }
+// jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded)=>{
+// // error
+// if(error){
+//   console.log(error);
+//   return res.status(401).send({message: 'unauthorized'})
+// }
+// console.log('value in the token', token);
+// })
+//   next()
+// }
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
 
     const volunteerCollection = client.db('volunteerDB').collection('volunteering');
     const requestedCollection = client.db('volunteerDB').collection('requestedVolunteer')
 
 
-    app.post('/jwt', logger, async(req, res)=>{
-      const user = req.body;
-      console.log('user for token', user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
+    // app.post('/jwt',  async(req, res)=>{
+    //   const user = req.body;
+    //   console.log('user for token', user);
+    //   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
 
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none'
-      })
-      .send({success: true})
-    })
-    app.post('/logout', async(req, res)=>{
-      const user = req.body;
-      console.log('logging out', user);
-      // res.clearCookie('token', {maxAge: 0} .send({success: true}))
-    })
-    app.get('/volunteerNeeded', logger, async(req, res)=>{
+    //   res.cookie('token', token, {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: 'none'
+    //   })
+    //   .send({success: true})
+    // })
+    // app.post('/logout', async(req, res)=>{
+    //   const user = req.body;
+    //   console.log('logging out', user);
+    //   res.clearCookie('token', {maxAge: 0} .send({success: true}))
+    // })
+    app.get('/volunteerNeeded',  async(req, res)=>{
       const cursor = volunteerCollection.find();
       const result = await cursor.toArray();
       res.send(result)
     })
-    app.get('/reqCollection', logger, async(req, res)=>{
+    app.get('/reqCollection',  async(req, res)=>{
       console.log('cookies', req.cookies);
       const cursor = requestedCollection.find();
       const result  = await cursor.toArray();
       res.send(result)
       console.log(result);
     })
-    app.get('/volunteerNeeded/:id',logger, async(req, res)=>{
+    app.get('/volunteerNeeded/:id', async(req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await volunteerCollection.findOne(query);
       res.send(result)
     })
-    app.post('/volunteers', logger, async(req, res)=>{
+    app.post('/volunteers', async(req, res)=>{
       const volunteer = req.body;
       console.log(volunteer);
       const result = await volunteerCollection.insertOne(volunteer);
       res.send(result)
     })
-    app.post('/requestedVolunteer',logger, async(req, res)=>{
+    app.post('/requestedVolunteer', async(req, res)=>{
       const reqVolunteer = req.body;
       console.log(reqVolunteer);
       const result = await requestedCollection.insertOne(reqVolunteer);
@@ -96,24 +107,26 @@ async function run() {
     // app.get('/reqVolunteer', async(req, res)=>{
     //   const id
     // })
-    app.get('/volunteering/:email', logger, async(req, res)=>{
+    app.get('/volunteering/:email', async(req, res)=>{
       console.log(req.params.email);
-      console.log('token', req.cookies.token);
+    
       const result = await volunteerCollection.find({email:req.params.email}).toArray()
       res.send(result)
     })
-    // app.get('/reqVolunteering/:email', async(req, res)=>{
-    //   console.log(req.params.email);
-    //   const result = await requestedCollection.find({email:req.params.email}).toArray()
-    //   res.send(result)
-    // })
-    app.get('/singleVolunteer/:id', logger, async(req, res ) =>{
+    app.get('/reqVolunteering/:email', async(req, res)=>{
+      console.log(req.params.email);
+     
+      const result = await requestedCollection.find({email:req.params.email}).toArray()
+      res.send(result)
+    })
+
+    app.get('/singleVolunteer/:id', async(req, res ) =>{
       console.log(req.params.id);
       const result = await volunteerCollection.findOne({_id: new ObjectId(req.params.id)})
       res.send(result)
     })
     
-    app.put('/updateVolunteer/:id', logger,async(req, res)=>{
+    app.put('/updateVolunteer/:id', async(req, res)=>{
       console.log(req.params.id);
       const query = {_id: new ObjectId(req.params.id)};
       const data ={
@@ -132,24 +145,24 @@ async function run() {
       res.send(result)
     })
     
-    app.delete('/volunteerDelete/:id',logger, async(req, res) =>{
-      const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
-      const result = await volunteerCollection.deleteOne(query);
+    app.delete('/volunteerDelete/:id', async(req, res) =>{
+      // const id = req.params.id;
+      // const query = {_id: new ObjectId(id)};
+      const result = await volunteerCollection.deleteOne({_id: new ObjectId(req.params.id)});
+    
       res.send(result)
       console.log(result);
-      res.send(result)
     })
-    app.delete('/reqVolunteerDelete/:id',logger, async(req, res) =>{
-      const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
-      const result = await requestedCollection.deleteOne(query);
+    app.delete('/reqVolunteerDelete/:id', async(req, res) =>{
+      // const id = req.params.id;
+      // const query = {_id: new ObjectId(id)};
+      const result = await requestedCollection.deleteOne({_id: new ObjectId(req.params.id)});
       res.send(result)
       console.log(result);
-      res.send(result)
+      // res.send(result)
     })
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
