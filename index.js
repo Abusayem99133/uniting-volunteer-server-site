@@ -3,7 +3,6 @@ const cors = require('cors');
 // const jwt = require('jsonwebtoken')
 // const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { useAsyncError } = require('react-router-dom');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
@@ -27,26 +26,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-// const logger = async( req, res, next )=>{
-//   console.log('request for call', req.host, req.originalUrl)
-//   next()
-// }
-// const verifyToken = async(req, res, next)=>{
-//   const token = req.cookies?.token;
-//   console.log('value of token in middleware', token);
-// if(!token){
-//   return res.status(401).send({message: 'unAuthorized'})
-// }
-// jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded)=>{
-// // error
-// if(error){
-//   console.log(error);
-//   return res.status(401).send({message: 'unauthorized'})
-// }
-// console.log('value in the token', token);
-// })
-//   next()
-// }
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -57,23 +37,7 @@ async function run() {
     const requestedCollection = client.db('volunteerDB').collection('requestedVolunteer')
 
 
-    // app.post('/jwt',  async(req, res)=>{
-    //   const user = req.body;
-    //   console.log('user for token', user);
-    //   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
-
-    //   res.cookie('token', token, {
-    //     httpOnly: true,
-    //     secure: true,
-    //     sameSite: 'none'
-    //   })
-    //   .send({success: true})
-    // })
-    // app.post('/logout', async(req, res)=>{
-    //   const user = req.body;
-    //   console.log('logging out', user);
-    //   res.clearCookie('token', {maxAge: 0} .send({success: true}))
-    // })
+   
     app.get('/volunteerNeeded',  async(req, res)=>{
       const cursor = volunteerCollection.find();
       const result = await cursor.toArray();
